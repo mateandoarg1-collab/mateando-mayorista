@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mayorista Mateando</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="icono.jpg">
+<link rel="apple-touch-icon" href="icono.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f2ee;--card:#fff;--ink:#111;--muted:#77756f;--line:#e4e2dc;--green:#2f7a3b;--green2:#e6f1e6;--warn:#b5462f;--warn2:#f8e7e2;--amber:#9a6a00;--amber2:#fbf0d6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 Poppins,system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select,textarea{font:inherit;font-size:16px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+.cab{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px}
+.cab img{height:22px}.cab .yo{margin-left:auto;font-size:13px;color:var(--muted)}.cab .yo button{text-decoration:underline;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:#fff;border-bottom:1px solid var(--line);padding:6px 12px;position:sticky;top:43px;z-index:4}
+.tab{flex:none;padding:8px 14px;border-radius:99px;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap}
+.tab.on{background:var(--ink);color:#fff}
+.tab .n{display:inline-block;min-width:18px;height:18px;padding:0 5px;margin-left:5px;border-radius:9px;background:var(--warn);color:#fff;font-size:11px;line-height:18px;text-align:center}
+main{max-width:860px;margin:0 auto;padding:16px 16px 120px}
+.vista{display:none}.vista.on{display:block}
+h2{font-size:20px;margin:4px 0 12px}h3{font-size:15px;margin:18px 0 8px}
+.caja{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:12px;background:var(--ink);color:#fff;font-weight:600}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}.btn.ok{background:var(--green)}.btn.mal{background:#fff;color:var(--warn);border:1px solid var(--warn2)}
+.btn.full{width:100%}.btn:disabled{opacity:.5}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--muted)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.muted{color:var(--muted)}.small{font-size:13px}.r{text-align:right}
+.fila{display:flex;gap:10px;align-items:center}.fila>*{min-width:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.g2{grid-template-columns:1fr}}
+/* sugerencias */
+.sug{border:1px solid var(--line);border-radius:10px;margin-top:4px;background:#fff;max-height:260px;overflow:auto}
+.sug button{display:block;width:100%;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.sug button small{display:block;color:var(--muted);font-size:12px}
+/* items del pedido */
+.it{display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.it .nom{font-weight:600;font-size:14px}.it .ctr{display:flex;gap:6px;align-items:center;grid-column:1/-1}
+.it .ctr input{width:auto;flex:1;min-width:0;padding:8px 10px}.it .ctr .q{max-width:90px}
+.it .x{color:var(--warn);font-size:13px;font-weight:600}
+.tot{display:flex;justify-content:space-between;padding:4px 0;font-size:15px}.tot.big{font-size:20px;font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+/* lista de pedidos */
+.ped{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:8px}
+.ped .a{flex:1;min-width:0}.ped .a b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ped .a small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ped .b{text-align:right;white-space:nowrap}.ped .b b{display:block}
+.ped.anul{opacity:.45}.ped.anul b{text-decoration:line-through}
+.est{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700}
+.est.Pendiente{background:var(--amber2);color:var(--amber)}.est.Armado{background:#e5eefb;color:#2456a6}.est.Entregado{background:var(--green2);color:var(--green)}
+.debe{color:var(--warn);font-size:12px;font-weight:600}.pago-ok{color:var(--green);font-size:12px;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.kpi span{font-size:12px;color:var(--muted)}.kpi b{display:block;font-size:20px;margin-top:2px}
+.rk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.rk:last-child{border:0}
+.rk .p{width:22px;text-align:center;font-weight:700;color:var(--muted)}.rk .n{flex:1;min-width:0}.rk .n b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk .bar{height:5px;background:var(--ink);border-radius:3px;margin-top:4px}.rk .v{text-align:right;white-space:nowrap;font-size:14px}
+.barras{display:flex;align-items:flex-end;gap:3px;height:120px;margin-top:10px}.barras div{flex:1;background:var(--ink);border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.barras div:hover::after{content:attr(data-t);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:11px;padding:3px 6px;border-radius:6px;white-space:nowrap}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal.on{display:flex}.modal .hoja{background:#fff;width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px 28px}
+@media(min-width:700px){.modal{align-items:center}.modal .hoja{border-radius:18px}}
+.cerrar{float:right;font-size:26px;line-height:1;color:var(--muted)}
+.tabla{width:100%;border-collapse:collapse;font-size:14px}.tabla td{padding:7px 4px;border-bottom:1px solid var(--line)}
+.aviso{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:30;display:none;max-width:90vw}
+.login{max-width:340px;margin:12vh auto;text-align:center;padding:0 16px}.login img{height:34px;margin-bottom:24px}
+.login input{text-align:center;font-size:28px;letter-spacing:.4em}
+.pie{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:none;z-index:6}
+.pie .in{max-width:860px;margin:0 auto;display:flex;gap:12px;align-items:center}.pie .in b{font-size:19px}
+body.ver-nuevo .pie.activo{display:block}
+.vacio{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
+</style>
+</head>
+<body>
+
+<div id="login" class="login">
+  <img src="logo.jpg" alt="Mateando" onerror="this.style.display='none'">
+  <h2>Pedidos mayoristas</h2>
+  <p class="muted small">Ingresá tu PIN</p>
+  <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+  <button class="btn full" style="margin-top:12px" onclick="entrar()">Entrar</button>
+  <p id="loginErr" class="debe" style="margin-top:10px"></p>
+</div>
+
+<div id="app" style="display:none">
+  <div class="cab"><img src="logo.jpg" alt="Mateando" onerror="this.outerHTML='<b>MATEANDO</b>'"><b class="small muted">MAYORISTA</b>
+    <div class="yo"><span id="yoNom"></span> · <button onclick="salir()">salir</button></div></div>
+  <nav class="tabs" id="tabs"></nav>
+  <main>
+    <!-- NUEVO PEDIDO -->
+    <section class="vista" id="v-nuevo">
+      <h2 id="tituloNuevo">Nuevo pedido</h2>
+      <div class="caja">
+        <label>Cliente</label>
+        <input id="cliBus" placeholder="Buscar por nombre o CUIT…" autocomplete="off" oninput="sugClientes()">
+        <div id="cliSug"></div>
+        <div id="cliSel"></div>
+      </div>
+      <div class="caja">
+        <label style="margin-top:0">Productos</label>
+        <input id="prodBus" placeholder="Buscar producto…" autocomplete="off" oninput="sugProductos()">
+        <div id="prodSug"></div>
+        <div id="items"></div>
+      </div>
+      <div class="caja">
+        <div class="g2">
+          <div><label style="margin-top:0">Fecha</label><input id="fFecha" type="date"></div>
+          <div><label style="margin-top:0">Fecha de entrega</label><input id="fEntrega" type="date"></div>
+        </div>
+        <label>Entrega</label>
+        <div class="chips" id="chEntrega"></div>
+        <div id="dirBox"><label>Dirección / datos de envío</label><textarea id="fDir"></textarea></div>
+        <label>Factura</label>
+        <div class="chips" id="chIva"></div>
+        <div id="pagoIniBox">
+          <label>Pago al momento</label>
+          <div class="chips" id="chPago"></div>
+          <div id="pagoParcial" style="display:none" class="g2">
+            <input id="fPagoMonto" inputmode="numeric" placeholder="Monto cobrado">
+            <select id="fPagoMedio"><option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Mercado Pago</option></select>
+          </div>
+        </div>
+        <div id="vendBox" style="display:none"><label>Vendedor</label><select id="fVend"></select></div>
+        <label>Observaciones</label><textarea id="fObs" placeholder="Personalización, packaging, horario de retiro…"></textarea>
+      </div>
+      <div class="caja">
+        <div class="tot"><span>Neto</span><span id="tNeto">$0</span></div>
+        <div class="tot"><span>IVA 21%</span><span id="tIva">$0</span></div>
+        <div class="tot big"><span>Total</span><span id="tTot">$0</span></div>
+        <div class="tot small muted" id="tGan"></div>
+      </div>
+      <button class="btn full ok" id="btnGuardar" onclick="guardar()">Guardar pedido</button>
+      <button class="btn full sec" id="btnCancelarEd" style="margin-top:8px;display:none" onclick="limpiar()">Cancelar edición</button>
+    </section>
+
+    <!-- PEDIDOS -->
+    <section class="vista" id="v-pedidos">
+      <h2>Pedidos</h2>
+      <div class="chips" id="chPer"></div>
+      <div id="perCustom" style="display:none" class="g2"><input type="date" id="pDesde" onchange="pintarPedidos()"><input type="date" id="pHasta" onchange="pintarPedidos()"></div>
+      <input id="pBus" placeholder="Buscar cliente, producto o N°…" oninput="pintarPedidos()" style="margin:6px 0">
+      <div class="chips" id="chFiltro"></div>
+      <div class="kpis" id="pKpis"></div>
+      <div id="pLista"></div>
+    </section>
+
+    <!-- PENDIENTES -->
+    <section class="vista" id="v-pend">
+      <h2>Pendientes</h2>
+      <h3>Para armar o entregar</h3><div id="penEnt"></div>
+      <h3>Por cobrar</h3><div id="penCob"></div>
+    </section>
+
+    <!-- CLIENTES -->
+    <section class="vista" id="v-clientes">
+      <h2>Clientes</h2>
+      <div class="fila"><input id="cBus" placeholder="Buscar…" oninput="pintarClientes()"><button class="btn sec" onclick="editarCliente()">+ Nuevo</button></div>
+      <div id="cLista"></div>
+    </section>
+
+    <!-- MÉTRICAS -->
+    <section class="vista" id="v-met">
+      <h2>Métricas</h2>
+      <div class="chips" id="chPerM"></div>
+      <div class="kpis" id="mKpis"></div>
+      <div class="caja"><b class="small">Ventas por <span id="mUnidad">día</span></b><div class="barras" id="mBarras"></div></div>
+      <div class="caja" id="mVendBox"><b class="small">Por vendedor</b><div id="mVend"></div></div>
+      <div class="caja"><b class="small">Top clientes</b><div id="mCli"></div></div>
+      <div class="caja"><b class="small">Top productos (unidades)</b><div id="mProd"></div></div>
+    </section>
+
+    <!-- AJUSTES (admin) -->
+    <section class="vista" id="v-aj">
+      <h2>Ajustes</h2>
+      <div class="caja"><div class="fila"><b style="flex:1">Vendedores</b><button class="btn sec" onclick="editarVendedor()">+ Agregar</button></div><div id="ajVend"></div></div>
+      <div class="caja"><div class="fila"><b style="flex:1">Productos</b><button class="btn sec" onclick="editarProducto()">+ Agregar</button></div>
+        <input id="ajPBus" placeholder="Buscar producto…" oninput="pintarAjustes()" style="margin-top:10px"><div id="ajProd"></div></div>
+    </section>
+  </main>
+  <div class="pie" id="pie"><div class="in"><div style="flex:1"><span class="small muted" id="pieCant"></span><br><b id="pieTot">$0</b></div><button class="btn ok" onclick="guardar()">Guardar</button></div></div>
+</div>
+
+<div class="modal" id="modal" onclick="if(event.target===this)cerrarModal()"><div class="hoja" id="hoja"></div></div>
+<div class="aviso" id="aviso"></div>
+
+<script>
+const API = new URLSearchParams(location.search).get('api') || 'https://claude-workspace-virid.vercel.app/api/mayorista-app';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const jsArg = (s) => esc(JSON.stringify(String(s ?? '')));
+const $$ = (n) => '$' + Math.round(n || 0).toLocaleString('es-AR');
+const num = (s) => Math.round(Number(String(s ?? '').replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) || 0);
+const hoy = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+const fmtF = (f) => f ? f.slice(8, 10) + '/' + f.slice(5, 7) + (f.slice(0, 4) !== hoy().slice(0, 4) ? '/' + f.slice(2, 4) : '') : '';
+const mem = { get: (k) => { try { return localStorage.getItem('may_' + k); } catch { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem('may_' + k) : localStorage.setItem('may_' + k, v); } catch {} } };
+function aviso(t) { const a = $('aviso'); a.textContent = t; a.style.display = 'block'; clearTimeout(aviso.t); aviso.t = setTimeout(() => a.style.display = 'none', 2600); }
+
+let D = { yo: null, pedidos: [], clientes: [], productos: [], vendedores: [] };
+let pin = mem.get('pin') || '';
+
+async function api(body) {
+  const r = await fetch(API, body ? { method: 'POST', headers: { 'content-type': 'application/json', 'x-pin': pin }, body: JSON.stringify(body) } : { headers: { 'x-pin': pin }, cache: 'no-store' });
+  const j = await r.json().catch(() => ({ error: 'Error de conexión' }));
+  if (!r.ok || j.error) throw new Error(j.error || 'Error');
+  return j;
+}
+async function cargar() { D = await api(); pintarTodo(); }
+
+async function entrar() {
+  pin = $('pin').value.trim(); $('loginErr').textContent = '';
+  try { await cargar(); mem.set('pin', pin); $('login').style.display = 'none'; $('app').style.display = 'block'; ir(mem.get('vista') || 'nuevo'); }
+  catch (e) { $('loginErr').textContent = e.message; }
+}
+$('pin').addEventListener('keydown', (e) => e.key === 'Enter' && entrar());
+function salir() { mem.set('pin', null); location.reload(); }
+
+// ---------- navegación ----------
+const VISTAS = [['nuevo', 'Nuevo pedido'], ['pedidos', 'Pedidos'], ['pend', 'Pendientes'], ['clientes', 'Clientes'], ['met', 'Métricas'], ['aj', 'Ajustes', true]];
+function pintarTabs() {
+  const nPend = vivos().filter((p) => p.estado !== 'Entregado' || p.saldo > 0).length;
+  $('tabs').innerHTML = VISTAS.filter((v) => !v[2] || D.yo.admin).map(([k, t]) => `<button class="tab${vista === k ? ' on' : ''}" onclick="ir('${k}')">${t}${k === 'pend' && nPend ? `<span class="n">${nPend}</span>` : ''}</button>`).join('');
+}
+let vista = 'nuevo';
+function ir(k) {
+  vista = k; mem.set('vista', k);
+  document.querySelectorAll('.vista').forEach((v) => v.classList.toggle('on', v.id === 'v-' + k));
+  document.body.className = 'ver-' + k; pintarTabs(); window.scrollTo(0, 0);
+}
+function pintarTodo() {
+  $('yoNom').textContent = D.yo.nombre + (D.yo.admin ? ' (admin)' : '');
+  pintarTabs(); pintarNuevo(); pintarPedidos(); pintarPend(); pintarClientes(); pintarMet(); if (D.yo.admin) pintarAjustes();
+}
+const vivos = () => D.pedidos.filter((p) => !p.anulado);
+
+// ---------- nuevo pedido ----------
+let F = nuevoF();
+function nuevoF() { return { nro: null, cliente: null, items: [], fecha: hoy(), fechaEntrega: '', entrega: 'Retiran', direccion: '', conIva: true, pago: 'No', pagoMonto: '', pagoMedio: 'Transferencia', obs: '', vendedor: '' }; }
+function limpiar() { F = nuevoF(); pintarNuevo(); }
+function chips(id, ops, val, fn) { $(id).innerHTML = ops.map((o) => `<button class="chip${o === val ? ' on' : ''}" onclick="${fn}('${o}')">${o}</button>`).join(''); }
+function pintarNuevo() {
+  $('tituloNuevo').textContent = F.nro ? `Editar pedido N° ${F.nro}` : 'Nuevo pedido';
+  $('btnCancelarEd').style.display = F.nro ? 'flex' : 'none';
+  $('btnGuardar').textContent = F.nro ? 'Guardar cambios' : 'Guardar pedido';
+  $('fFecha').value = F.fecha; $('fEntrega').value = F.fechaEntrega; $('fDir').value = F.direccion; $('fObs').value = F.obs;
+  chips('chEntrega', ['Retiran', 'Envío', 'Llevamos'], F.entrega, 'setEntrega');
+  $('dirBox').style.display = F.entrega === 'Retiran' ? 'none' : 'block';
+  chips('chIva', ['Con IVA (factura A/B)', 'Sin factura'], F.conIva ? 'Con IVA (factura A/B)' : 'Sin factura', 'setIva');
+  $('pagoIniBox').style.display = F.nro ? 'none' : 'block';
+  chips('chPago', ['No', 'Total', 'Parcial'], F.pago, 'setPago');
+  $('pagoParcial').style.display = F.pago === 'No' ? 'none' : 'grid';
+  $('fPagoMonto').value = F.pago === 'Total' ? totales().total.toLocaleString('es-AR') : F.pagoMonto;
+  $('fPagoMonto').disabled = F.pago === 'Total'; $('fPagoMedio').value = F.pagoMedio;
+  if (D.yo.admin) {
+    const vs = [...new Set(['', D.yo.nombre, ...D.vendedores.filter((v) => v.activo).map((v) => v.nombre), ...D.pedidos.map((p) => p.vendedor).filter(Boolean)])];
+    $('vendBox').style.display = 'block';
+    $('fVend').innerHTML = vs.map((v) => `<option value="${esc(v)}"${v === (F.vendedor || D.yo.nombre) ? ' selected' : ''}>${esc(v || '—')}</option>`).join('');
+  }
+  pintarCliSel(); pintarItems();
+}
+function setEntrega(v) { leerForm(); F.entrega = v; pintarNuevo(); }
+function setIva(v) { leerForm(); F.conIva = v.startsWith('Con'); pintarNuevo(); }
+function setPago(v) { leerForm(); F.pago = v; pintarNuevo(); }
+function leerForm() {
+  F.fecha = $('fFecha').value || hoy(); F.fechaEntrega = $('fEntrega').value; F.direccion = $('fDir').value; F.obs = $('fObs').value;
+  F.pagoMonto = $('fPagoMonto').value; F.pagoMedio = $('fPagoMedio').value; if (D.yo.admin) F.vendedor = $('fVend').value;
+}
+['fFecha', 'fEntrega', 'fDir', 'fObs', 'fPagoMonto', 'fPagoMedio'].forEach((id) => $(id).addEventListener('change', leerForm));
+
+function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function sugClientes() {
+  const q = norm($('cliBus').value.trim());
+  if (!q) { $('cliSug').innerHTML = ''; return; }
+  const ult = ultimoPedido();
+  const res = D.clientes.filter((c) => norm(c.nombre).includes(q) || norm(c.cuit).includes(q))
+    .sort((a, b) => (ult[b.nombre.toLowerCase()]?.fecha || '').localeCompare(ult[a.nombre.toLowerCase()]?.fecha || '')).slice(0, 8);
+  $('cliSug').innerHTML = `<div class="sug">${res.map((c) => { const u = ult[c.nombre.toLowerCase()]; return `<button onclick="elegirCliente(${jsArg(c.nombre)})">${esc(c.nombre)}<small>${[c.cuit, u ? 'último pedido ' + fmtF(u.fecha) : ''].filter(Boolean).join(' · ')}</small></button>`; }).join('')}
+    <button onclick="clienteNuevo()"><b>+ Cliente nuevo: "${esc($('cliBus').value.trim())}"</b></button></div>`;
+}
+function ultimoPedido() { const m = {}; for (const p of vivos()) { const k = p.cliente.toLowerCase(); if (!m[k] || p.fecha > m[k].fecha) m[k] = p; } return m; }
+function elegirCliente(nombre) {
+  const c = D.clientes.find((x) => x.nombre === nombre) || { nombre };
+  F.cliente = { ...c }; $('cliBus').value = ''; $('cliSug').innerHTML = '';
+  if (c.direccion && !F.direccion) { F.direccion = c.direccion; $('fDir').value = c.direccion; }
+  pintarCliSel();
+}
+function clienteNuevo() { F.cliente = { nombre: $('cliBus').value.trim(), nuevo: true }; $('cliBus').value = ''; $('cliSug').innerHTML = ''; pintarCliSel(); }
+function pintarCliSel() {
+  const c = F.cliente; $('cliBus').style.display = c ? 'none' : 'block';
+  if (!c) { $('cliSel').innerHTML = ''; return; }
+  const u = ultimoPedido()[c.nombre.toLowerCase()];
+  const deuda = vivos().filter((p) => p.cliente.toLowerCase() === c.nombre.toLowerCase()).reduce((s, p) => s + p.saldo, 0);
+  $('cliSel').innerHTML = `<div class="fila" style="margin-top:4px"><div style="flex:1"><b>${esc(c.nombre)}</b>${c.nuevo ? ' <span class="est Armado">nuevo</span>' : ''}
+      <div class="small muted">${esc([c.cuit, c.telefono].filter(Boolean).join(' · '))}</div>
+      ${deuda ? `<div class="debe">Debe ${$$(deuda)}</div>` : ''}</div><button class="chip" onclick="F.cliente=null;pintarCliSel()">Cambiar</button></div>
+    ${c.nuevo ? `<div class="g2"><div><label>CUIT</label><input oninput="F.cliente.cuit=this.value" value="${esc(c.cuit || '')}" inputmode="numeric"></div>
+      <div><label>Teléfono</label><input oninput="F.cliente.telefono=this.value" value="${esc(c.telefono || '')}" inputmode="tel"></div></div>
+      <label>Email</label><input oninput="F.cliente.email=this.value" value="${esc(c.email || '')}" type="email">` : ''}
+    ${u && !F.nro && !F.items.length ? `<button class="btn sec full" style="margin-top:10px" onclick="repetir(${u.nro})">↻ Repetir último pedido (${fmtF(u.fecha)} · ${u.items.length} productos)</button>` : ''}`;
+}
+function repetir(nro) {
+  const p = D.pedidos.find((x) => x.nro === nro); if (!p) return;
+  F.items = p.items.map((i) => ({ nombre: i.nombre, cant: i.cant, precio: i.precio || precioSugerido(i.nombre), pers: i.pers }));
+  pintarCliSel(); pintarItems(); aviso('Productos copiados, revisá precios y cantidades');
+}
+function precioSugerido(nombre, cliente) {
+  const k = nombre.toLowerCase(), c = (cliente || F.cliente?.nombre || '').toLowerCase();
+  let mejor = null;
+  for (const p of vivos()) for (const i of p.items) if (i.nombre.toLowerCase() === k && i.precio && (!mejor || (p.cliente.toLowerCase() === c) > mejor.dc || p.fecha > mejor.f)) mejor = { v: i.precio, f: p.fecha, dc: p.cliente.toLowerCase() === c };
+  return mejor?.v || D.productos.find((x) => x.nombre.toLowerCase() === k)?.precio || 0;
+}
+function vendidos() { if (vendidos.m) return vendidos.m; const m = {}; for (const p of vivos()) for (const i of p.items) m[i.nombre.toLowerCase()] = (m[i.nombre.toLowerCase()] || 0) + i.cant; return vendidos.m = m; }
+function sugProductos() {
+  const q = norm($('prodBus').value.trim());
+  if (!q) { $('prodSug').innerHTML = ''; return; }
+  const palabras = q.split(/\s+/), v = vendidos();
+  const res = D.productos.filter((p) => palabras.every((w) => norm(p.nombre).includes(w))).sort((a, b) => (v[b.nombre.toLowerCase()] || 0) - (v[a.nombre.toLowerCase()] || 0)).slice(0, 10);
+  $('prodSug').innerHTML = `<div class="sug">${res.map((p) => { const pr = precioSugerido(p.nombre); return `<button onclick="agregarItem(${jsArg(p.nombre)})">${esc(p.nombre)}<small>${pr ? 'último precio ' + $$(pr) : 'sin precio cargado'}</small></button>`; }).join('')}
+    <button onclick="agregarItem($('prodBus').value.trim())"><b>+ Producto nuevo: "${esc($('prodBus').value.trim())}"</b></button></div>`;
+}
+function agregarItem(nombre) {
+  if (!nombre) return;
+  F.items.push({ nombre, cant: 1, precio: precioSugerido(nombre), pers: false });
+  $('prodBus').value = ''; $('prodSug').innerHTML = ''; pintarItems(); pintarCliSel();
+  setTimeout(() => document.querySelector(`#items .it:last-child .q`)?.select(), 30);
+}
+function pintarItems() {
+  $('items').innerHTML = F.items.map((i, k) => `<div class="it"><div class="nom">${esc(i.nombre)}</div><button class="x" onclick="F.items.splice(${k},1);pintarItems()">Quitar</button>
+    <div class="ctr"><input class="q" inputmode="numeric" value="${i.cant}" oninput="F.items[${k}].cant=num(this.value);pintarTotales()" aria-label="Cantidad">
+      <span class="small muted">×</span><input inputmode="numeric" value="${i.precio ? i.precio.toLocaleString('es-AR') : ''}" placeholder="Precio unit. neto" oninput="F.items[${k}].precio=num(this.value);pintarTotales()">
+      <button class="chip${i.pers ? ' on' : ''}" onclick="F.items[${k}].pers=!F.items[${k}].pers;pintarItems()">Pers.</button></div></div>`).join('') || '<div class="vacio">Todavía no agregaste productos</div>';
+  pintarTotales();
+}
+function totales() {
+  const neto = F.items.reduce((s, i) => s + i.cant * i.precio, 0), iva = F.conIva ? Math.round(neto * 0.21) : 0;
+  const costo = F.items.reduce((s, i) => s + i.cant * (D.productos.find((p) => p.nombre.toLowerCase() === i.nombre.toLowerCase())?.costo || 0), 0);
+  return { neto, iva, total: neto + iva, costo, uni: F.items.reduce((s, i) => s + i.cant, 0) };
+}
+function pintarTotales() {
+  const t = totales();
+  $('tNeto').textContent = $$(t.neto); $('tIva').textContent = $$(t.iva); $('tTot').textContent = $$(t.total);
+  $('tGan').innerHTML = D.yo.admin && t.costo ? `<span>Costo ${$$(t.costo)}</span><span>Ganancia ${$$(t.neto - t.costo)} (${t.neto ? Math.round((t.neto - t.costo) / t.neto * 100) : 0}%)</span>` : '';
+  $('pie').classList.toggle('activo', F.items.length > 0);
+  $('pieCant').textContent = `${t.uni} unidades · ${F.items.length} productos`; $('pieTot').textContent = $$(t.total);
+  if (F.pago === 'Total') $('fPagoMonto').value = t.total.toLocaleString('es-AR');
+}
+async function guardar() {
+  leerForm();
+  if (!F.cliente) return aviso('Elegí el cliente');
+  if (!F.items.length) return aviso('Agregá al menos un producto');
+  if (F.items.some((i) => !i.cant)) return aviso('Hay productos sin cantidad');
+  if (F.items.some((i) => !i.precio) && !confirm('Hay productos sin precio. ¿Guardar igual?')) return;
+  const t = totales(), b = $('btnGuardar'); b.disabled = true;
+  try {
+    const r = await api({ accion: 'pedido', nro: F.nro, cliente: F.cliente.nombre, datosCliente: F.cliente, items: F.items, fecha: F.fecha, fechaEntrega: F.fechaEntrega,
+      entrega: F.entrega, direccion: F.entrega === 'Retiran' ? '' : F.direccion, conIva: F.conIva, obs: F.obs, vendedor: F.vendedor,
+      pagoInicial: F.pago === 'No' ? null : { monto: F.pago === 'Total' ? t.total : num(F.pagoMonto), medio: F.pagoMedio } });
+    aviso(F.nro ? 'Pedido actualizado' : `Pedido N° ${r.nro} guardado`);
+    F = nuevoF(); vendidos.m = null; await cargar(); verPedido(r.nro);
+  } catch (e) { aviso(e.message); } finally { b.disabled = false; }
+}
+
+// ---------- pedidos ----------
+const PER = ['Hoy', 'Semana', 'Mes', 'Mes anterior', 'Año', 'Todo', 'Elegir'];
+let per = mem.get('per') || 'Mes', filtro = 'Todos', perM = mem.get('perM') || 'Mes';
+function rango(p) {
+  const h = hoy(), d = new Date(h + 'T12:00:00');
+  if (p === 'Hoy') return [h, h];
+  if (p === 'Semana') { const x = new Date(d); x.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return [x.toISOString().slice(0, 10), h]; }
+  if (p === 'Mes') return [h.slice(0, 8) + '01', h];
+  if (p === 'Mes anterior') { const x = new Date(d.getFullYear(), d.getMonth() - 1, 1, 12), y = new Date(d.getFullYear(), d.getMonth(), 0, 12); return [x.toISOString().slice(0, 10), y.toISOString().slice(0, 10)]; }
+  if (p === 'Año') return [h.slice(0, 4) + '-01-01', h];
+  if (p === 'Elegir') return [$('pDesde').value || '2000-01-01', $('pHasta').value || h];
+  return ['2000-01-01', '2999-12-31'];
+}
+function setPer(p) { per = p; mem.set('per', p); $('perCustom').style.display = p === 'Elegir' ? 'grid' : 'none'; pintarPedidos(); }
+function setFiltro(f) { filtro = f; pintarPedidos(); }
+function filaPedido(p) {
+  const pagoTxt = p.anulado ? 'anulado' : p.saldo > 0 ? `<span class="debe">debe ${$$(p.saldo)}</span>` : p.total ? '<span class="pago-ok">pagado</span>' : '';
+  return `<button class="ped${p.anulado ? ' anul' : ''}" onclick="verPedido(${p.nro})"><div class="a"><b>${esc(p.cliente)}</b>
+    <small>N° ${p.nro} · ${fmtF(p.fecha)}${D.yo.admin && p.vendedor ? ' · ' + esc(p.vendedor) : ''} · ${esc(p.items.map((i) => i.cant + ' ' + i.nombre).join(', '))}</small></div>
+    <div class="b"><b>${$$(p.total)}</b><span class="est ${p.estado}">${p.estado}</span> ${pagoTxt}</div></button>`;
+}
+function pintarPedidos() {
+  chips('chPer', PER, per, 'setPer'); chips('chFiltro', ['Todos', 'Pendientes', 'Deben', 'Anulados'], filtro, 'setFiltro');
+  const [d, h] = rango(per), q = norm($('pBus').value.trim());
+  let l = D.pedidos.filter((p) => p.fecha >= d && p.fecha <= h);
+  if (q) l = l.filter((p) => norm(p.cliente + ' ' + p.nro + ' ' + p.vendedor + ' ' + p.items.map((i) => i.nombre).join(' ')).includes(q));
+  if (filtro === 'Pendientes') l = l.filter((p) => !p.anulado && p.estado !== 'Entregado');
+  else if (filtro === 'Deben') l = l.filter((p) => !p.anulado && p.saldo > 0);
+  else if (filtro === 'Anulados') l = l.filter((p) => p.anulado); else l = l.filter((p) => !p.anulado || q);
+  const v = l.filter((p) => !p.anulado), tot = v.reduce((s, p) => s + p.total, 0);
+  $('pKpis').innerHTML = `<div class="kpi"><span>Vendido</span><b>${$$(tot)}</b></div><div class="kpi"><span>Pedidos</span><b>${v.length}</b></div>
+    <div class="kpi"><span>Unidades</span><b>${v.reduce((s, p) => s + p.items.reduce((a, i) => a + i.cant, 0), 0).toLocaleString('es-AR')}</b></div>
+    <div class="kpi"><span>Por cobrar</span><b style="color:var(--warn)">${$$(v.reduce((s, p) => s + p.saldo, 0))}</b></div>
+    ${D.yo.admin ? `<div class="kpi"><span>Ganancia (neto − costo)</span><b>${$$(v.reduce((s, p) => s + p.neto - p.costo, 0))}</b></div>` : ''}`;
+  $('pLista').innerHTML = l.slice(0, 300).map(filaPedido).join('') + (l.length > 300 ? `<div class="vacio">Mostrando 300 de ${l.length}. Usá el buscador.</div>` : '') || '<div class="vacio">No hay pedidos en este período</div>';
+}
+
+function verPedido(nro) {
+  const p = D.pedidos.find((x) => x.nro === nro); if (!p) return;
+  const sinPrecio = p.items.every((i) => !i.precio);
+  $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button>
+    <div class="small muted">Pedido N° ${p.nro} · ${fmtF(p.fecha)}${p.vendedor ? ' · ' + esc(p.vendedor) : ''}${p.origen !== 'app' ? ' · importado del Excel' : ''}</div>
+    <h2 style="margin:4px 0">${esc(p.cliente)}</h2>
+    ${p.anulado ? '<div class="debe">PEDIDO ANULADO</div>' : ''}
+    <div class="chips">${['Pendiente', 'Armado', 'Entregado'].map((e) => `<button class="chip${p.estado === e ? ' on' : ''}" onclick="cambiarEstado(${p.nro},'${e}')">${e}</button>`).join('')}</div>
+    <table class="tabla">${p.items.map((i) => `<tr><td>${i.cant} × ${esc(i.nombre)}${i.pers ? ' <span class="est Armado">pers.</span>' : ''}</td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
+    <div style="margin-top:10px">
+      ${sinPrecio ? '' : `<div class="tot"><span>Neto</span><span>${$$(p.neto)}</span></div>`}
+      ${p.iva ? `<div class="tot"><span>IVA</span><span>${$$(p.iva)}</span></div>` : ''}
+      <div class="tot big"><span>Total</span><span>${$$(p.total)}</span></div>
+      ${D.yo.admin && p.costo ? `<div class="tot small muted"><span>Costo ${$$(p.costo)}</span><span>Ganancia ${$$(p.neto - p.costo)}</span></div>` : ''}
+    </div>
+    <h3>Pagos</h3>
+    ${p.pagos.map((g, k) => `<div class="fila small" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">${fmtF(g.fecha)} · ${esc(g.medio)}${g.nota ? ' · ' + esc(g.nota) : ''}</span><b>${$$(g.monto)}</b>
+      <button class="x debe" onclick="borrarPago(${p.nro},${k})">✕</button></div>`).join('') || '<div class="small muted">Sin pagos registrados</div>'}
+    <div class="tot"><span>${p.saldo > 0 ? 'Saldo' : 'Pagado'}</span><b class="${p.saldo > 0 ? 'debe' : 'pago-ok'}" style="font-size:16px">${p.saldo > 0 ? $$(p.saldo) : '✓'}</b></div>
+    ${p.saldo > 0 && !p.anulado ? `<div class="g2" style="margin-top:6px"><input id="pgMonto" inputmode="numeric" value="${p.saldo.toLocaleString('es-AR')}">
+      <select id="pgMedio"><option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Mercado Pago</option></select></div>
+      <button class="btn ok full" style="margin-top:8px" onclick="registrarPago(${p.nro})">Registrar pago</button>` : ''}
+    <h3>Entrega</h3><div class="small">${esc(p.entrega)}${p.fechaEntrega ? ' · para el ' + fmtF(p.fechaEntrega) : ''}</div>
+    ${p.direccion ? `<div class="small muted" style="white-space:pre-line">${esc(p.direccion)}</div>` : ''}
+    ${p.obs ? `<h3>Observaciones</h3><div class="small" style="white-space:pre-line">${esc(p.obs)}</div>` : ''}
+    <div class="g2" style="margin-top:18px">
+      <button class="btn sec" onclick="whatsapp(${p.nro})">Enviar por WhatsApp</button>
+      <button class="btn sec" onclick="imprimir(${p.nro})">Imprimir / PDF</button>
+      <button class="btn sec" onclick="editar(${p.nro})">Editar</button>
+      <button class="btn mal" onclick="anular(${p.nro})">${p.anulado ? 'Reactivar' : 'Anular'}</button>
+    </div>`;
+  $('modal').classList.add('on');
+}
+function cerrarModal() { $('modal').classList.remove('on'); }
+async function accion(body, msg) { try { await api(body); aviso(msg); await cargar(); if (body.nro && $('modal').classList.contains('on')) verPedido(body.nro); } catch (e) { aviso(e.message); } }
+const cambiarEstado = (nro, estado) => accion({ accion: 'estado', nro, estado }, 'Estado: ' + estado);
+const registrarPago = (nro) => accion({ accion: 'pago', nro, monto: num($('pgMonto').value), medio: $('pgMedio').value }, 'Pago registrado');
+const borrarPago = (nro, idx) => confirm('¿Borrar este pago?') && accion({ accion: 'borrarPago', nro, idx }, 'Pago borrado');
+const anular = (nro) => confirm('¿Seguro?') && accion({ accion: 'anular', nro }, 'Listo');
+function editar(nro) {
+  const p = D.pedidos.find((x) => x.nro === nro);
+  F = { ...nuevoF(), nro, cliente: D.clientes.find((c) => c.nombre.toLowerCase() === p.cliente.toLowerCase()) || { nombre: p.cliente },
+    items: p.items.map((i) => ({ nombre: i.nombre, cant: i.cant, precio: i.precio, pers: i.pers })), fecha: p.fecha, fechaEntrega: p.fechaEntrega,
+    entrega: p.entrega, direccion: p.direccion, conIva: p.conIva, obs: p.obs, vendedor: p.vendedor };
+  cerrarModal(); pintarNuevo(); ir('nuevo');
+}
+function textoPedido(p) {
+  return `*MATEANDO · Pedido N° ${p.nro}*\n${p.cliente}\n${fmtF(p.fecha)}\n\n` + p.items.map((i) => `• ${i.cant} × ${i.nombre}${i.precio ? ` — ${$$(i.precio)} c/u` : ''}`).join('\n') +
+    `\n\n${p.iva ? `Neto: ${$$(p.neto)}\nIVA 21%: ${$$(p.iva)}\n` : ''}*Total: ${$$(p.total)}*${p.saldo > 0 && p.saldo < p.total ? `\nPagado: ${$$(p.pagado)} · Saldo: ${$$(p.saldo)}` : ''}` +
+    `\n\nEntrega: ${p.entrega}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}`;
+}
+function whatsapp(nro) {
+  const p = D.pedidos.find((x) => x.nro === nro), c = D.clientes.find((x) => x.nombre.toLowerCase() === p.cliente.toLowerCase());
+  let tel = String(c?.telefono || '').replace(/\D/g, ''); if (tel && !tel.startsWith('54')) tel = '549' + tel.replace(/^0/, '').replace(/^15/, '');
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(textoPedido(p))}`, '_blank');
+}
+function imprimir(nro) {
+  const p = D.pedidos.find((x) => x.nro === nro), w = window.open('', '_blank');
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Pedido ${p.nro} - ${esc(p.cliente)}</title><style>body{font:14px system-ui;max-width:700px;margin:30px auto;padding:0 20px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}h1{font-size:20px}</style></head><body>
+    <img src="${location.origin}/logo.jpg" style="height:30px" onerror="this.remove()"><h1>Pedido N° ${p.nro}</h1><p><b>${esc(p.cliente)}</b><br>Fecha: ${fmtF(p.fecha)}${p.vendedor ? '<br>Vendedor: ' + esc(p.vendedor) : ''}</p>
+    <table><tr><th>Cant.</th><th>Producto</th><th class="r">Unit.</th><th class="r">Subtotal</th></tr>${p.items.map((i) => `<tr><td>${i.cant}</td><td>${esc(i.nombre)}${i.pers ? ' (personalizado)' : ''}</td><td class="r">${i.precio ? $$(i.precio) : ''}</td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
+    <p class="r">${p.iva ? `Neto: ${$$(p.neto)}<br>IVA 21%: ${$$(p.iva)}<br>` : ''}<b style="font-size:18px">Total: ${$$(p.total)}</b></p>
+    <p>Entrega: ${esc(p.entrega)}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}<br>${esc(p.direccion).replace(/\n/g, '<br>')}</p>${p.obs ? `<p>Obs.: ${esc(p.obs)}</p>` : ''}
+    <script>setTimeout(()=>print(),300)<\/script></body></html>`);
+  w.document.close();
+}
+
+// ---------- pendientes ----------
+function pintarPend() {
+  const v = vivos();
+  const ent = v.filter((p) => p.estado !== 'Entregado').sort((a, b) => (a.fechaEntrega || '9').localeCompare(b.fechaEntrega || '9') || a.fecha.localeCompare(b.fecha));
+  const cob = v.filter((p) => p.saldo > 0).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  $('penEnt').innerHTML = ent.map((p) => filaPedido(p).replace('<small>', `<small>${p.fechaEntrega ? `<b style="display:inline;color:${p.fechaEntrega < hoy() ? 'var(--warn)' : 'inherit'}">entrega ${fmtF(p.fechaEntrega)}</b> · ` : ''}`)).join('') || '<div class="vacio">Nada pendiente 🎉</div>';
+  $('penCob').innerHTML = (cob.length ? `<div class="small muted">Total por cobrar: <b class="debe">${$$(cob.reduce((s, p) => s + p.saldo, 0))}</b></div>` : '') + (cob.map(filaPedido).join('') || '<div class="vacio">Nadie debe nada</div>');
+}
+
+// ---------- clientes ----------
+function pintarClientes() {
+  const q = norm($('cBus').value.trim()), m = {};
+  for (const p of vivos()) { const k = p.cliente.toLowerCase(); (m[k] ||= { n: 0, tot: 0, saldo: 0, ult: '' }); m[k].n++; m[k].tot += p.total; m[k].saldo += p.saldo; if (p.fecha > m[k].ult) m[k].ult = p.fecha; }
+  const l = D.clientes.filter((c) => !q || norm(c.nombre + ' ' + c.cuit).includes(q)).map((c) => ({ ...c, s: m[c.nombre.toLowerCase()] || { n: 0, tot: 0, saldo: 0, ult: '' } }))
+    .filter((c) => q || c.s.n || D.yo.admin).sort((a, b) => b.s.ult.localeCompare(a.s.ult));
+  $('cLista').innerHTML = l.slice(0, 200).map((c) => `<button class="ped" onclick="verCliente(${jsArg(c.nombre)})"><div class="a"><b>${esc(c.nombre)}</b>
+    <small>${c.s.n} pedidos${c.s.ult ? ' · último ' + fmtF(c.s.ult) : ''}${c.cuit ? ' · ' + esc(c.cuit) : ''}</small></div>
+    <div class="b"><b>${$$(c.s.tot)}</b>${c.s.saldo ? `<span class="debe">debe ${$$(c.s.saldo)}</span>` : ''}</div></button>`).join('') || '<div class="vacio">Sin clientes</div>';
+}
+function verCliente(nombre) {
+  const c = D.clientes.find((x) => x.nombre === nombre) || { nombre }, ps = D.pedidos.filter((p) => p.cliente.toLowerCase() === nombre.toLowerCase());
+  const v = ps.filter((p) => !p.anulado), prods = {};
+  for (const p of v) for (const i of p.items) prods[i.nombre] = (prods[i.nombre] || 0) + i.cant;
+  const top = Object.entries(prods).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button><h2>${esc(c.nombre)}</h2>
+    <div class="small muted">${esc([c.cuit, c.telefono, c.email].filter(Boolean).join(' · ')) || 'Sin datos de contacto'}</div>
+    ${c.direccion ? `<div class="small muted" style="white-space:pre-line">${esc(c.direccion)}</div>` : ''}
+    <div class="kpis"><div class="kpi"><span>Comprado</span><b>${$$(v.reduce((s, p) => s + p.total, 0))}</b></div><div class="kpi"><span>Pedidos</span><b>${v.length}</b></div>
+      <div class="kpi"><span>Debe</span><b class="${v.some((p) => p.saldo) ? 'debe' : ''}" style="font-size:20px">${$$(v.reduce((s, p) => s + p.saldo, 0))}</b></div></div>
+    ${top.length ? `<h3>Lo que más compra</h3>${top.map(([n, q]) => `<div class="small">${q} × ${esc(n)}</div>`).join('')}` : ''}
+    <div class="g2" style="margin-top:14px"><button class="btn ok" onclick="pedidoPara(${jsArg(c.nombre)})">+ Nuevo pedido</button><button class="btn sec" onclick="editarCliente(${jsArg(c.nombre)})">Editar datos</button></div>
+    <h3>Historial</h3>${ps.map(filaPedido).join('') || '<div class="vacio">Sin pedidos</div>'}`;
+  $('modal').classList.add('on');
+}
+function pedidoPara(nombre) { cerrarModal(); F = nuevoF(); elegirCliente(nombre); pintarNuevo(); ir('nuevo'); }
+function editarCliente(nombre) {
+  const c = D.clientes.find((x) => x.nombre === nombre) || { nombre: '' };
+  $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button><h2>${nombre ? 'Editar cliente' : 'Cliente nuevo'}</h2>
+    <label>Nombre / razón social</label><input id="ecN" value="${esc(c.nombre)}"><div class="g2"><div><label>CUIT</label><input id="ecC" value="${esc(c.cuit || '')}" inputmode="numeric"></div>
+    <div><label>Teléfono (WhatsApp)</label><input id="ecT" value="${esc(c.telefono || '')}" inputmode="tel"></div></div>
+    <label>Email</label><input id="ecE" value="${esc(c.email || '')}" type="email"><label>Dirección</label><textarea id="ecD">${esc(c.direccion || '')}</textarea>
+    <button class="btn ok full" style="margin-top:14px" onclick="guardarCliente(${jsArg(nombre || '')})">Guardar</button>`;
+  $('modal').classList.add('on');
+}
+async function guardarCliente(original) {
+  try { await api({ accion: 'cliente', original, nombre: $('ecN').value, cuit: $('ecC').value, telefono: $('ecT').value, email: $('ecE').value, direccion: $('ecD').value });
+    aviso('Cliente guardado'); cerrarModal(); await cargar(); } catch (e) { aviso(e.message); }
+}
+
+// ---------- métricas ----------
+function setPerM(p) { perM = p; mem.set('perM', p); pintarMet(); }
+function ranking(el, pares, fmt) {
+  const max = Math.max(1, ...pares.map((x) => x[1]));
+  $(el).innerHTML = pares.map(([n, v, extra], k) => `<div class="rk"><span class="p">${k + 1}</span><div class="n"><b>${esc(n)}</b><div class="bar" style="width:${v / max * 100}%"></div></div><div class="v"><b>${fmt(v)}</b>${extra ? `<br><span class="small muted">${extra}</span>` : ''}</div></div>`).join('') || '<div class="vacio">Sin datos</div>';
+}
+function pintarMet() {
+  chips('chPerM', PER.filter((p) => p !== 'Elegir'), perM, 'setPerM');
+  const [d, h] = rango(perM), v = vivos().filter((p) => p.fecha >= d && p.fecha <= h);
+  const tot = v.reduce((s, p) => s + p.total, 0), neto = v.reduce((s, p) => s + p.neto, 0), costo = v.reduce((s, p) => s + p.costo, 0);
+  $('mKpis').innerHTML = `<div class="kpi"><span>Vendido (con IVA)</span><b>${$$(tot)}</b></div><div class="kpi"><span>Neto</span><b>${$$(neto)}</b></div>
+    <div class="kpi"><span>Pedidos</span><b>${v.length}</b></div><div class="kpi"><span>Ticket promedio</span><b>${$$(v.length ? tot / v.length : 0)}</b></div>
+    ${D.yo.admin ? `<div class="kpi"><span>Ganancia bruta</span><b>${$$(neto - costo)}</b></div><div class="kpi"><span>Margen</span><b>${neto ? Math.round((neto - costo) / neto * 100) : 0}%</b></div>` : ''}`;
+  // barras: por día si el rango es ≤ 62 días, si no por mes
+  const dias = (Date.parse(h > hoy() ? hoy() : h) - Date.parse(d < '2025-01-01' ? (v.at(-1)?.fecha || hoy()) : d)) / 864e5;
+  const porMes = dias > 62, agg = {};
+  for (const p of v) { const k = porMes ? p.fecha.slice(0, 7) : p.fecha; agg[k] = (agg[k] || 0) + p.total; }
+  const ks = Object.keys(agg).sort(), max = Math.max(1, ...Object.values(agg));
+  $('mUnidad').textContent = porMes ? 'mes' : 'día';
+  $('mBarras').innerHTML = ks.map((k) => `<div style="height:${agg[k] / max * 100}%" data-t="${porMes ? k.slice(5) + '/' + k.slice(2, 4) : fmtF(k)}: ${$$(agg[k])}"></div>`).join('') || '<div class="vacio" style="background:none">Sin ventas</div>';
+  const g = (key) => { const m = {}; for (const p of v) { const k = key(p) || 'Sin asignar'; (m[k] ||= [0, 0]); m[k][0] += p.total; m[k][1]++; } return Object.entries(m).sort((a, b) => b[1][0] - a[1][0]); };
+  $('mVendBox').style.display = D.yo.admin ? 'block' : 'none';
+  ranking('mVend', g((p) => p.vendedor).map(([n, [t, c]]) => [n, t, c + ' pedidos']), $$);
+  ranking('mCli', g((p) => p.cliente).slice(0, 10).map(([n, [t, c]]) => [n, t, c + ' pedidos']), $$);
+  const pr = {}; for (const p of v) for (const i of p.items) pr[i.nombre] = (pr[i.nombre] || 0) + i.cant;
+  ranking('mProd', Object.entries(pr).sort((a, b) => b[1] - a[1]).slice(0, 10), (x) => x.toLocaleString('es-AR') + ' u.');
+}
+
+// ---------- ajustes ----------
+function pintarAjustes() {
+  $('ajVend').innerHTML = D.vendedores.map((v) => `<div class="rk"><div class="n"><b>${esc(v.nombre)}${v.admin ? ' · admin' : ''}${v.activo ? '' : ' · inactivo'}</b><span class="small muted">PIN ${esc(v.pin)}</span></div><button class="chip" onclick="editarVendedor(${jsArg(v.nombre)})">Editar</button></div>`).join('') || '<div class="small muted" style="margin-top:8px">Todavía no hay vendedores. Agregalos con su PIN.</div>';
+  const q = norm($('ajPBus').value.trim()), vend = vendidos();
+  const l = D.productos.filter((p) => !q || norm(p.nombre).includes(q)).sort((a, b) => (vend[b.nombre.toLowerCase()] || 0) - (vend[a.nombre.toLowerCase()] || 0)).slice(0, 60);
+  $('ajProd').innerHTML = l.map((p) => `<div class="rk"><div class="n"><b>${esc(p.nombre)}</b><span class="small muted">precio ${p.precio ? $$(p.precio) : '—'} · costo ${p.costo ? $$(p.costo) : '<span class="debe">sin costo</span>'}</span></div><button class="chip" onclick="editarProducto(${jsArg(p.nombre)})">Editar</button></div>`).join('');
+}
+function editarVendedor(nombre) {
+  const v = D.vendedores.find((x) => x.nombre === nombre) || { nombre: '', pin: String(Math.floor(1000 + Math.random() * 9000)), admin: false, activo: true };
+  $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button><h2>${nombre ? 'Editar' : 'Nuevo'} vendedor</h2>
+    <label>Nombre</label><input id="evN" value="${esc(v.nombre)}"><label>PIN</label><input id="evP" value="${esc(v.pin)}" inputmode="numeric">
+    <div class="chips"><button class="chip${v.admin ? ' on' : ''}" onclick="this.classList.toggle('on')" id="evA">Admin (ve todo y costos)</button><button class="chip${v.activo ? ' on' : ''}" onclick="this.classList.toggle('on')" id="evX">Activo</button></div>
+    <button class="btn ok full" style="margin-top:14px" onclick="guardarVendedor(${jsArg(nombre || "")})">Guardar</button>`;
+  $('modal').classList.add('on');
+}
+async function guardarVendedor(original) {
+  try { await api({ accion: 'vendedor', original, nombre: $('evN').value, pin: $('evP').value, admin: $('evA').classList.contains('on'), activo: $('evX').classList.contains('on') });
+    aviso('Vendedor guardado'); cerrarModal(); await cargar(); } catch (e) { aviso(e.message); }
+}
+function editarProducto(nombre) {
+  const p = D.productos.find((x) => x.nombre === nombre) || { nombre: '', precio: 0, costo: 0 };
+  $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button><h2>${nombre ? 'Editar' : 'Nuevo'} producto</h2>
+    <label>Nombre</label><input id="epN" value="${esc(p.nombre)}"><div class="g2"><div><label>Precio mayorista neto</label><input id="epP" value="${p.precio || ''}" inputmode="numeric"></div>
+    <div><label>Costo unitario</label><input id="epC" value="${p.costo || ''}" inputmode="numeric"></div></div>
+    <div class="g2" style="margin-top:14px"><button class="btn ok" onclick="guardarProducto(${jsArg(nombre || '')}, true)">Guardar</button>${nombre ? `<button class="btn mal" onclick="guardarProducto(${jsArg(nombre)}, false)">Ocultar del catálogo</button>` : ''}</div>`;
+  $('modal').classList.add('on');
+}
+async function guardarProducto(original, activo) {
+  try { await api({ accion: 'producto', original, nombre: $('epN').value, precio: num($('epP').value), costo: num($('epC').value), activo });
+    aviso('Producto guardado'); cerrarModal(); await cargar(); } catch (e) { aviso(e.message); }
+}
+
+// arranque
+if (pin) { $('pin').value = pin; entrar(); }
+</script>
+</body>
+</html>
