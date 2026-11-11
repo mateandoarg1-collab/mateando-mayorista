@@ -215,7 +215,11 @@ async function cargar() { D = await api(); pintarTodo(); }
 async function entrar() {
   pin = $('pin').value.trim(); $('loginErr').textContent = '';
   try { await cargar(); mem.set('pin', pin); $('login').style.display = 'none'; $('app').style.display = 'block'; ir(mem.get('vista') || 'nuevo'); }
-  catch (e) { $('loginErr').textContent = e.message; }
+  catch (e) {
+    // PIN guardado que ya no existe: probar sin PIN (mientras la app esté abierta sin PIN)
+    if (pin && !entrar.reintento) { entrar.reintento = true; mem.set('pin', null); $('pin').value = ''; return entrar(); }
+    $('loginErr').textContent = e.message;
+  }
 }
 $('pin').addEventListener('keydown', (e) => e.key === 'Enter' && entrar());
 function salir() { mem.set('pin', null); location.reload(); }
@@ -257,9 +261,9 @@ function pintarNuevo() {
   $('fPagoMonto').value = F.pago === 'Total' ? totales().total.toLocaleString('es-AR') : F.pagoMonto;
   $('fPagoMonto').disabled = F.pago === 'Total'; $('fPagoMedio').value = F.pagoMedio;
   if (D.yo.admin) {
-    const vs = [...new Set(['', D.yo.nombre, ...D.vendedores.filter((v) => v.activo).map((v) => v.nombre), ...D.pedidos.map((p) => p.vendedor).filter(Boolean)])];
+    const vs = [...new Set(['', ...(D.yo.nombre === 'Equipo' ? [] : [D.yo.nombre]),...D.vendedores.filter((v) => v.activo).map((v) => v.nombre), ...D.pedidos.map((p) => p.vendedor).filter(Boolean)])];
     $('vendBox').style.display = 'block';
-    $('fVend').innerHTML = vs.map((v) => `<option value="${esc(v)}"${v === (F.vendedor || D.yo.nombre) ? ' selected' : ''}>${esc(v || '—')}</option>`).join('');
+    $('fVend').innerHTML = vs.map((v) => `<option value="${esc(v)}"${v === (F.vendedor || (D.yo.nombre === 'Equipo' ? '' : D.yo.nombre)) ? ' selected' : ''}>${esc(v || '—')}</option>`).join('');
   }
   pintarCliSel(); pintarItems();
 }
@@ -353,6 +357,7 @@ async function guardar() {
   leerForm();
   if (!F.cliente) return aviso('Elegí el cliente');
   if (!F.items.length) return aviso('Agregá al menos un producto');
+  if (D.yo.nombre === 'Equipo' && !F.vendedor) return aviso('Elegí el vendedor');
   if (F.items.some((i) => !i.cant)) return aviso('Hay productos sin cantidad');
   if (F.items.some((i) => !i.precio) && !confirm('Hay productos sin precio. ¿Guardar igual?')) return;
   const t = totales(), b = $('btnGuardar'); b.disabled = true;
@@ -579,7 +584,8 @@ async function guardarProducto(original, activo) {
 }
 
 // arranque
-if (pin) { $('pin').value = pin; entrar(); }
+// De momento se entra sin PIN (si la API lo vuelve a pedir, aparece la pantalla de PIN).
+$('pin').value = pin; entrar();
 </script>
 </body>
 </html>
