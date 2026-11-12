@@ -427,7 +427,7 @@ function pintarPedidos() {
   let l = D.pedidos.filter((p) => p.fecha >= d && p.fecha <= h);
   if (q) l = l.filter((p) => norm(p.cliente + ' ' + p.nro + ' ' + p.vendedor + ' ' + p.items.map(etq).join(' ')).includes(q));
   if (filtro === 'Presupuestos') l = l.filter((p) => !p.anulado && esPresu(p));
-  else if (filtro === 'Facturar') l = l.filter((p) => !p.anulado && !esPresu(p) && p.conIva && !p.factura);
+  else if (filtro === 'Facturar') l = l.filter((p) => !p.anulado && !esPresu(p) && p.conIva && !p.factura && p.origen === 'app');
   else if (filtro === 'Pendientes') l = l.filter((p) => !p.anulado && !esPresu(p) && p.estado !== 'Entregado');
   else if (filtro === 'Deben') l = l.filter((p) => !p.anulado && p.saldo > 0);
   else if (filtro === 'Anulados') l = l.filter((p) => p.anulado); else l = l.filter((p) => (!p.anulado && !esPresu(p)) || q);
@@ -444,6 +444,7 @@ function bloqueFactura(p) {
     <div class="small muted">${esc(p.factura.nombre || '')} · CUIT ${esc(p.factura.doc || '')}${p.factura.fecha ? ' · ' + fmtF(p.factura.fecha) : ''}</div></div>
     ${p.factura.pdf ? `<a class="btn sec" href="${esc(p.factura.pdf)}" target="_blank" rel="noopener">Ver PDF</a>` : ''}</div>`;
   if (p.anulado || esPresu(p) || !D.yo.admin) return '';
+  if (p.origen !== 'app') return ''; // importados del Excel: se facturaban a mano por fuera
   if (!p.conIva) return '<h3>Factura</h3><div class="small muted">Cargado sin factura</div>';
   return `<h3>Factura</h3><button class="btn ok full" onclick="pedirFactura(${p.nro})">Facturar ${$$(p.total)}</button>`;
 }
