@@ -53,7 +53,8 @@ h2{font-size:20px;margin:4px 0 12px}h3{font-size:15px;margin:18px 0 8px}
 .ped .b{text-align:right;white-space:nowrap}.ped .b b{display:block}
 .ped.anul{opacity:.45}.ped.anul b{text-decoration:line-through}
 .est{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700}
-.est.Pendiente{background:var(--amber2);color:var(--amber)}.est.Armado{background:#e5eefb;color:#2456a6}.est.Entregado{background:var(--green2);color:var(--green)}
+.est.Pendiente{background:var(--amber2);color:var(--amber)}.est.Armado{background:#e5eefb;color:#2456a6}.est.Entregado{background:var(--green2);color:var(--green)}.est.Presupuesto{background:#efe7fb;color:#6b3fb0}
+.fact{background:var(--bg);border-radius:12px;padding:10px 12px;margin-top:8px}
 .debe{color:var(--warn);font-size:12px;font-weight:600}.pago-ok{color:var(--green);font-size:12px;font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.kpi span{font-size:12px;color:var(--muted)}.kpi b{display:block;font-size:20px;margin-top:2px}
@@ -147,6 +148,7 @@ body.ver-nuevo .pie.activo{display:block}
         <div class="tot small muted" id="tGan"></div>
       </div>
       <button class="btn full ok" id="btnGuardar" onclick="guardar()">Guardar pedido</button>
+      <button class="btn full sec" id="btnPresu" style="margin-top:8px" onclick="guardar(true)">Guardar como presupuesto</button>
       <button class="btn full sec" id="btnCancelarEd" style="margin-top:8px;display:none" onclick="limpiar()">Cancelar edición</button>
     </section>
 
@@ -164,6 +166,7 @@ body.ver-nuevo .pie.activo{display:block}
     <!-- PENDIENTES -->
     <section class="vista" id="v-pend">
       <h2>Pendientes</h2>
+      <h3>Presupuestos esperando respuesta</h3><div id="penPre"></div>
       <h3>Para armar o entregar</h3><div id="penEnt"></div>
       <h3>Por cobrar</h3><div id="penCob"></div>
     </section>
@@ -194,7 +197,7 @@ body.ver-nuevo .pie.activo{display:block}
         <input id="ajPBus" placeholder="Buscar producto…" oninput="pintarAjustes()" style="margin-top:10px"><div id="ajProd"></div></div>
     </section>
   </main>
-  <div class="pie" id="pie"><div class="in"><div style="flex:1"><span class="small muted" id="pieCant"></span><br><b id="pieTot">$0</b></div><button class="btn ok" onclick="guardar()">Guardar</button></div></div>
+  <div class="pie" id="pie"><div class="in"><div style="flex:1"><span class="small muted" id="pieCant"></span><br><b id="pieTot">$0</b></div><button class="btn sec" id="piePresu" onclick="guardar(true)" style="margin-right:6px">Presupuesto</button><button class="btn ok" onclick="guardar()">Guardar</button></div></div>
 </div>
 
 <div class="modal" id="modal" onclick="if(event.target===this)cerrarModal()"><div class="hoja" id="hoja"></div></div>
@@ -257,7 +260,9 @@ function pintarTodo() {
   $('yoNom').textContent = D.yo.nombre + (D.yo.admin ? ' (admin)' : '');
   pintarTabs(); pintarNuevo(); pintarPedidos(); pintarPend(); pintarClientes(); pintarMet(); if (D.yo.admin) pintarAjustes();
 }
-const vivos = () => D.pedidos.filter((p) => !p.anulado);
+// vivos = ventas de verdad (sin anulados ni presupuestos sin aprobar)
+const esPresu = (p) => p.estado === 'Presupuesto';
+const vivos = () => D.pedidos.filter((p) => !p.anulado && !esPresu(p));
 
 // ---------- nuevo pedido ----------
 let F = nuevoF();
@@ -268,6 +273,7 @@ function pintarNuevo() {
   $('tituloNuevo').textContent = F.nro ? `Editar pedido N° ${F.nro}` : 'Nuevo pedido';
   $('btnCancelarEd').style.display = F.nro ? 'flex' : 'none';
   $('btnGuardar').textContent = F.nro ? 'Guardar cambios' : 'Guardar pedido';
+  $('btnPresu').style.display = $('piePresu').style.display = F.nro ? 'none' : '';
   $('fFecha').value = F.fecha; $('fEntrega').value = F.fechaEntrega; $('fDir').value = F.direccion; $('fObs').value = F.obs;
   chips('chEntrega', ['Retiran', 'Envío', 'Llevamos'], F.entrega, 'setEntrega');
   $('dirBox').style.display = F.entrega === 'Retiran' ? 'none' : 'block';
@@ -377,7 +383,7 @@ function pintarTotales() {
   $('pieCant').textContent = `${t.uni} unidades · ${F.items.length} productos`; $('pieTot').textContent = $$(t.total);
   if (F.pago === 'Total') $('fPagoMonto').value = t.total.toLocaleString('es-AR');
 }
-async function guardar() {
+async function guardar(presupuesto) {
   leerForm();
   if (!F.cliente) return aviso('Elegí el cliente');
   if (!F.items.length) return aviso('Agregá al menos un producto');
@@ -388,8 +394,8 @@ async function guardar() {
   try {
     const r = await api({ accion: 'pedido', nro: F.nro, cliente: F.cliente.nombre, datosCliente: F.cliente, items: F.items, fecha: F.fecha, fechaEntrega: F.fechaEntrega,
       entrega: F.entrega, direccion: F.entrega === 'Retiran' ? '' : F.direccion, conIva: F.conIva, obs: F.obs, vendedor: F.vendedor,
-      pagoInicial: F.pago === 'No' ? null : { monto: F.pago === 'Total' ? t.total : num(F.pagoMonto), medio: F.pagoMedio } });
-    aviso(F.nro ? 'Pedido actualizado' : `Pedido N° ${r.nro} guardado`);
+      presupuesto: !F.nro && !!presupuesto, pagoInicial: presupuesto || F.pago === 'No' ? null : { monto: F.pago === 'Total' ? t.total : num(F.pagoMonto), medio: F.pagoMedio } });
+    aviso(F.nro ? 'Guardado' : presupuesto ? `Presupuesto N° ${r.nro} guardado` : `Pedido N° ${r.nro} guardado`);
     F = nuevoF(); vendidos.m = null; await cargar(); verPedido(r.nro);
   } catch (e) { aviso(e.message); } finally { b.disabled = false; }
 }
@@ -410,20 +416,22 @@ function rango(p) {
 function setPer(p) { per = p; mem.set('per', p); $('perCustom').style.display = p === 'Elegir' ? 'grid' : 'none'; pintarPedidos(); }
 function setFiltro(f) { filtro = f; pintarPedidos(); }
 function filaPedido(p) {
-  const pagoTxt = p.anulado ? 'anulado' : p.saldo > 0 ? `<span class="debe">debe ${$$(p.saldo)}</span>` : p.total ? '<span class="pago-ok">pagado</span>' : '';
+  const pagoTxt = p.anulado ? 'anulado' : esPresu(p) ? '' : p.saldo > 0 ? `<span class="debe">debe ${$$(p.saldo)}</span>` : p.total ? '<span class="pago-ok">pagado</span>' : '';
   return `<button class="ped${p.anulado ? ' anul' : ''}" onclick="verPedido(${p.nro})"><div class="a"><b>${esc(p.cliente)}</b>
     <small>N° ${p.nro} · ${fmtF(p.fecha)}${D.yo.admin && p.vendedor ? ' · ' + esc(p.vendedor) : ''} · ${esc(p.items.map((i) => i.cant + ' ' + etq(i)).join(', '))}</small></div>
     <div class="b"><b>${$$(p.total)}</b><span class="est ${p.estado}">${p.estado}</span> ${pagoTxt}</div></button>`;
 }
 function pintarPedidos() {
-  chips('chPer', PER, per, 'setPer'); chips('chFiltro', ['Todos', 'Pendientes', 'Deben', 'Anulados'], filtro, 'setFiltro');
+  chips('chPer', PER, per, 'setPer'); chips('chFiltro', ['Todos', 'Presupuestos', 'Pendientes', 'Deben', 'Facturar', 'Anulados'], filtro, 'setFiltro');
   const [d, h] = rango(per), q = norm($('pBus').value.trim());
   let l = D.pedidos.filter((p) => p.fecha >= d && p.fecha <= h);
   if (q) l = l.filter((p) => norm(p.cliente + ' ' + p.nro + ' ' + p.vendedor + ' ' + p.items.map(etq).join(' ')).includes(q));
-  if (filtro === 'Pendientes') l = l.filter((p) => !p.anulado && p.estado !== 'Entregado');
+  if (filtro === 'Presupuestos') l = l.filter((p) => !p.anulado && esPresu(p));
+  else if (filtro === 'Facturar') l = l.filter((p) => !p.anulado && !esPresu(p) && p.conIva && !p.factura);
+  else if (filtro === 'Pendientes') l = l.filter((p) => !p.anulado && !esPresu(p) && p.estado !== 'Entregado');
   else if (filtro === 'Deben') l = l.filter((p) => !p.anulado && p.saldo > 0);
-  else if (filtro === 'Anulados') l = l.filter((p) => p.anulado); else l = l.filter((p) => !p.anulado || q);
-  const v = l.filter((p) => !p.anulado), tot = v.reduce((s, p) => s + p.total, 0);
+  else if (filtro === 'Anulados') l = l.filter((p) => p.anulado); else l = l.filter((p) => (!p.anulado && !esPresu(p)) || q);
+  const v = l.filter((p) => !p.anulado && !esPresu(p)), tot = v.reduce((s, p) => s + p.total, 0);
   $('pKpis').innerHTML = `<div class="kpi"><span>Vendido</span><b>${$$(tot)}</b></div><div class="kpi"><span>Pedidos</span><b>${v.length}</b></div>
     <div class="kpi"><span>Unidades</span><b>${v.reduce((s, p) => s + p.items.reduce((a, i) => a + i.cant, 0), 0).toLocaleString('es-AR')}</b></div>
     <div class="kpi"><span>Por cobrar</span><b style="color:var(--warn)">${$$(v.reduce((s, p) => s + p.saldo, 0))}</b></div>
@@ -431,14 +439,40 @@ function pintarPedidos() {
   $('pLista').innerHTML = l.slice(0, 300).map(filaPedido).join('') + (l.length > 300 ? `<div class="vacio">Mostrando 300 de ${l.length}. Usá el buscador.</div>` : '') || '<div class="vacio">No hay pedidos en este período</div>';
 }
 
+function bloqueFactura(p) {
+  if (p.factura) return `<h3>Factura</h3><div class="fact fila"><div style="flex:1"><b>${esc(p.factura.tipo)} ${esc(p.factura.numero)}</b>
+    <div class="small muted">${esc(p.factura.nombre || '')} · CUIT ${esc(p.factura.doc || '')}${p.factura.fecha ? ' · ' + fmtF(p.factura.fecha) : ''}</div></div>
+    ${p.factura.pdf ? `<a class="btn sec" href="${esc(p.factura.pdf)}" target="_blank" rel="noopener">Ver PDF</a>` : ''}</div>`;
+  if (p.anulado || esPresu(p) || !D.yo.admin) return '';
+  if (!p.conIva) return '<h3>Factura</h3><div class="small muted">Cargado sin factura</div>';
+  return `<h3>Factura</h3><button class="btn ok full" onclick="pedirFactura(${p.nro})">Facturar ${$$(p.total)}</button>`;
+}
+function pedirFactura(nro) {
+  const p = D.pedidos.find((x) => x.nro === nro), c = D.clientes.find((x) => x.nombre.toLowerCase() === p.cliente.toLowerCase()) || {};
+  $('hoja').innerHTML = `<button class="cerrar" onclick="verPedido(${nro})">×</button><h2>Facturar pedido N° ${nro}</h2>
+    <div class="small muted">${esc(p.cliente)} · Total ${$$(p.total)} (neto ${$$(p.neto)} + IVA ${$$(p.iva)})</div>
+    <label>CUIT del cliente</label><input id="fcDoc" inputmode="numeric" value="${esc(c.cuit || '')}" placeholder="11 números">
+    <label>Mail para mandarle la factura (opcional)</label><input id="fcMail" type="email" value="${esc(c.email || '')}">
+    <div class="small muted" style="margin-top:10px">Ecomm-App elige sola si va A o B según el CUIT. Una vez emitida no se puede deshacer (se anula con nota de crédito).</div>
+    <button class="btn ok full" id="fcBtn" style="margin-top:14px" onclick="facturar(${nro})">Emitir factura</button>`;
+}
+async function facturar(nro) {
+  const b = $('fcBtn'); b.disabled = true; b.textContent = 'Emitiendo…';
+  try { const r = await api({ accion: 'facturar', nro, documento: $('fcDoc').value, email: $('fcMail').value });
+    aviso(`${r.factura.tipo} ${r.factura.numero} emitida`); await cargar(); verPedido(nro);
+  } catch (e) { aviso(e.message); b.disabled = false; b.textContent = 'Emitir factura'; }
+}
+const aprobar = (nro) => accion({ accion: 'aprobar', nro }, 'Presupuesto aprobado: ya es un pedido');
 function verPedido(nro) {
   const p = D.pedidos.find((x) => x.nro === nro); if (!p) return;
-  const sinPrecio = p.items.every((i) => !i.precio);
+  const sinPrecio = p.items.every((i) => !i.precio), presu = esPresu(p);
   $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button>
-    <div class="small muted">Pedido N° ${p.nro} · ${fmtF(p.fecha)}${p.vendedor ? ' · ' + esc(p.vendedor) : ''}${p.origen !== 'app' ? ' · importado del Excel' : ''}</div>
+    <div class="small muted">${presu ? 'Presupuesto' : 'Pedido'} N° ${p.nro} · ${fmtF(p.fecha)}${p.vendedor ? ' · ' + esc(p.vendedor) : ''}${p.origen !== 'app' ? ' · importado del Excel' : ''}</div>
     <h2 style="margin:4px 0">${esc(p.cliente)}</h2>
     ${p.anulado ? '<div class="debe">PEDIDO ANULADO</div>' : ''}
-    <div class="chips">${['Pendiente', 'Armado', 'Entregado'].map((e) => `<button class="chip${p.estado === e ? ' on' : ''}" onclick="cambiarEstado(${p.nro},'${e}')">${e}</button>`).join('')}</div>
+    ${presu ? `<div class="fact"><b>Presupuesto sin aprobar</b><div class="small muted">No cuenta como venta hasta que lo aprueben.</div>
+      ${p.anulado ? '' : `<button class="btn ok full" style="margin-top:8px" onclick="aprobar(${p.nro})">✓ Lo aprobaron: pasar a pedido</button>`}</div>` : ''}
+    <div class="chips" style="${presu ? 'display:none' : ''}">${['Pendiente', 'Armado', 'Entregado'].map((e) => `<button class="chip${p.estado === e ? ' on' : ''}" onclick="cambiarEstado(${p.nro},'${e}')">${e}</button>`).join('')}</div>
     <table class="tabla">${p.items.map((i) => `<tr><td style="display:flex;gap:10px;align-items:center">${th(i.nombre)}<span>${i.cant} × ${esc(etq(i))}${i.pers ? ' <span class="est Armado">pers.</span>' : ''}</span></td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
     <div style="margin-top:10px">
       ${sinPrecio ? '' : `<div class="tot"><span>Neto</span><span>${$$(p.neto)}</span></div>`}
@@ -446,20 +480,21 @@ function verPedido(nro) {
       <div class="tot big"><span>Total</span><span>${$$(p.total)}</span></div>
       ${D.yo.admin && p.costo ? `<div class="tot small muted"><span>Costo ${$$(p.costo)}</span><span>Ganancia ${$$(p.neto - p.costo)}</span></div>` : ''}
     </div>
-    <h3>Pagos</h3>
+    ${bloqueFactura(p)}
+    <div style="${presu ? 'display:none' : ''}"><h3>Pagos</h3>
     ${p.pagos.map((g, k) => `<div class="fila small" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">${fmtF(g.fecha)} · ${esc(g.medio)}${g.nota ? ' · ' + esc(g.nota) : ''}</span><b>${$$(g.monto)}</b>
       <button class="x debe" onclick="borrarPago(${p.nro},${k})">✕</button></div>`).join('') || '<div class="small muted">Sin pagos registrados</div>'}
     <div class="tot"><span>${p.saldo > 0 ? 'Saldo' : 'Pagado'}</span><b class="${p.saldo > 0 ? 'debe' : 'pago-ok'}" style="font-size:16px">${p.saldo > 0 ? $$(p.saldo) : '✓'}</b></div>
     ${p.saldo > 0 && !p.anulado ? `<div class="g2" style="margin-top:6px"><input id="pgMonto" inputmode="numeric" value="${p.saldo.toLocaleString('es-AR')}">
       <select id="pgMedio"><option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Mercado Pago</option></select></div>
-      <button class="btn ok full" style="margin-top:8px" onclick="registrarPago(${p.nro})">Registrar pago</button>` : ''}
+      <button class="btn ok full" style="margin-top:8px" onclick="registrarPago(${p.nro})">Registrar pago</button>` : ''}</div>
     <h3>Entrega</h3><div class="small">${esc(p.entrega)}${p.fechaEntrega ? ' · para el ' + fmtF(p.fechaEntrega) : ''}</div>
     ${p.direccion ? `<div class="small muted" style="white-space:pre-line">${esc(p.direccion)}</div>` : ''}
     ${p.obs ? `<h3>Observaciones</h3><div class="small" style="white-space:pre-line">${esc(p.obs)}</div>` : ''}
     <div class="g2" style="margin-top:18px">
       <button class="btn sec" onclick="whatsapp(${p.nro})">Enviar por WhatsApp</button>
       <button class="btn sec" onclick="imprimir(${p.nro})">Imprimir / PDF</button>
-      <button class="btn sec" onclick="editar(${p.nro})">Editar</button>
+      ${p.factura ? '' : `<button class="btn sec" onclick="editar(${p.nro})">Editar</button>`}
       <button class="btn mal" onclick="anular(${p.nro})">${p.anulado ? 'Reactivar' : 'Anular'}</button>
     </div>`;
   $('modal').classList.add('on');
@@ -478,9 +513,12 @@ function editar(nro) {
   cerrarModal(); pintarNuevo(); ir('nuevo');
 }
 function textoPedido(p) {
-  return `*MATEANDO · Pedido N° ${p.nro}*\n${p.cliente}\n${fmtF(p.fecha)}\n\n` + p.items.map((i) => `• ${i.cant} × ${etq(i)}${i.precio ? ` — ${$$(i.precio)} c/u` : ''}`).join('\n') +
+  const presu = esPresu(p);
+  return `*MATEANDO · ${presu ? 'Presupuesto' : 'Pedido'} N° ${p.nro}*\n${p.cliente}\n${fmtF(p.fecha)}\n\n` + p.items.map((i) => `• ${i.cant} × ${etq(i)}${i.precio ? ` — ${$$(i.precio)} c/u` : ''}`).join('\n') +
     `\n\n${p.iva ? `Neto: ${$$(p.neto)}\nIVA 21%: ${$$(p.iva)}\n` : ''}*Total: ${$$(p.total)}*${p.saldo > 0 && p.saldo < p.total ? `\nPagado: ${$$(p.pagado)} · Saldo: ${$$(p.saldo)}` : ''}` +
-    `\n\nEntrega: ${p.entrega}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}`;
+    `\n\nEntrega: ${p.entrega}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}` +
+    (presu ? `\n\nPresupuesto válido por 7 días. El pedido comienza a producirse una vez realizado el pago.` : '') +
+    (p.factura?.pdf ? `\n\nFactura: ${p.factura.pdf}` : '');
 }
 function whatsapp(nro) {
   const p = D.pedidos.find((x) => x.nro === nro), c = D.clientes.find((x) => x.nombre.toLowerCase() === p.cliente.toLowerCase());
@@ -489,11 +527,11 @@ function whatsapp(nro) {
 }
 function imprimir(nro) {
   const p = D.pedidos.find((x) => x.nro === nro), w = window.open('', '_blank');
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Pedido ${p.nro} - ${esc(p.cliente)}</title><style>body{font:14px system-ui;max-width:700px;margin:30px auto;padding:0 20px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}h1{font-size:20px}</style></head><body>
-    <img src="${location.origin}/logo.jpg" style="height:30px" onerror="this.remove()"><h1>Pedido N° ${p.nro}</h1><p><b>${esc(p.cliente)}</b><br>Fecha: ${fmtF(p.fecha)}${p.vendedor ? '<br>Vendedor: ' + esc(p.vendedor) : ''}</p>
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esPresu(p) ? 'Presupuesto' : 'Pedido'} ${p.nro} - ${esc(p.cliente)}</title><style>body{font:14px system-ui;max-width:700px;margin:30px auto;padding:0 20px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}h1{font-size:20px}</style></head><body>
+    <img src="${location.origin}/logo.jpg" style="height:30px" onerror="this.remove()"><h1>${esPresu(p) ? 'Presupuesto' : 'Pedido'} N° ${p.nro}</h1><p><b>${esc(p.cliente)}</b><br>Fecha: ${fmtF(p.fecha)}${p.vendedor ? '<br>Vendedor: ' + esc(p.vendedor) : ''}</p>
     <table><tr><th>Cant.</th><th>Producto</th><th class="r">Unit.</th><th class="r">Subtotal</th></tr>${p.items.map((i) => `<tr><td>${i.cant}</td><td>${esc(etq(i))}${i.pers ? ' (personalizado)' : ''}</td><td class="r">${i.precio ? $$(i.precio) : ''}</td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
     <p class="r">${p.iva ? `Neto: ${$$(p.neto)}<br>IVA 21%: ${$$(p.iva)}<br>` : ''}<b style="font-size:18px">Total: ${$$(p.total)}</b></p>
-    <p>Entrega: ${esc(p.entrega)}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}<br>${esc(p.direccion).replace(/\n/g, '<br>')}</p>${p.obs ? `<p>Obs.: ${esc(p.obs)}</p>` : ''}
+    <p>Entrega: ${esc(p.entrega)}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}<br>${esc(p.direccion).replace(/\n/g, '<br>')}</p>${p.obs ? `<p>Obs.: ${esc(p.obs)}</p>` : ''}${esPresu(p) ? '<p style="color:#666;font-size:12px">Presupuesto válido por 7 días. Precios netos + IVA 21%. El pedido comienza a producirse una vez realizado el pago. Pedido mínimo $500.000.</p>' : ''}
     <script>setTimeout(()=>print(),300)<\/script></body></html>`);
   w.document.close();
 }
@@ -501,6 +539,8 @@ function imprimir(nro) {
 // ---------- pendientes ----------
 function pintarPend() {
   const v = vivos();
+  const pre = D.pedidos.filter((p) => !p.anulado && esPresu(p)).sort((a, b) => b.fecha.localeCompare(a.fecha));
+  $('penPre').innerHTML = pre.map(filaPedido).join('') || '<div class="vacio">Ninguno</div>';
   const ent = v.filter((p) => p.estado !== 'Entregado').sort((a, b) => (a.fechaEntrega || '9').localeCompare(b.fechaEntrega || '9') || a.fecha.localeCompare(b.fecha));
   const cob = v.filter((p) => p.saldo > 0).sort((a, b) => a.fecha.localeCompare(b.fecha));
   $('penEnt').innerHTML = ent.map((p) => filaPedido(p).replace('<small>', `<small>${p.fechaEntrega ? `<b style="display:inline;color:${p.fechaEntrega < hoy() ? 'var(--warn)' : 'inherit'}">entrega ${fmtF(p.fechaEntrega)}</b> · ` : ''}`)).join('') || '<div class="vacio">Nada pendiente 🎉</div>';
@@ -519,7 +559,7 @@ function pintarClientes() {
 }
 function verCliente(nombre) {
   const c = D.clientes.find((x) => x.nombre === nombre) || { nombre }, ps = D.pedidos.filter((p) => p.cliente.toLowerCase() === nombre.toLowerCase());
-  const v = ps.filter((p) => !p.anulado), prods = {};
+  const v = ps.filter((p) => !p.anulado && !esPresu(p)), prods = {};
   for (const p of v) for (const i of p.items) prods[canon(i.nombre)] = (prods[canon(i.nombre)] || 0) + i.cant;
   const top = Object.entries(prods).sort((a, b) => b[1] - a[1]).slice(0, 5);
   $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button><h2>${esc(c.nombre)}</h2>
