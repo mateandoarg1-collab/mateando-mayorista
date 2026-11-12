@@ -83,6 +83,7 @@ body.ver-nuevo .pie.activo{display:block}
 .top button img,.top button .th{width:100%;height:auto;aspect-ratio:1;margin-bottom:5px}
 .top button span{display:block;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .fotoEd{width:140px;height:140px;border-radius:14px;object-fit:cover;background:var(--bg);display:block;margin:6px 0}
+.chips.colores{margin:8px 0 0}.chips.colores .chip{padding:5px 10px;font-size:13px}
 .vacio{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
 </style>
 </head>
@@ -204,7 +205,11 @@ const API = new URLSearchParams(location.search).get('api') || 'https://claude-w
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const jsArg = (s) => esc(JSON.stringify(String(s ?? '')));
-const fotoDe = (nombre) => D.productos.find((p) => p.nombre.toLowerCase() === String(nombre).toLowerCase())?.foto || '';
+// nombres viejos del Excel → producto del catálogo (columna "es" de App Productos)
+const canon = (nombre) => (D.alias || {})[String(nombre).toLowerCase()] || nombre;
+const prodDe = (nombre) => { const k = String(canon(nombre)).toLowerCase(); return D.productos.find((p) => p.nombre.toLowerCase() === k); };
+const fotoDe = (nombre) => prodDe(nombre)?.foto || '';
+const etq = (i) => i.nombre + (i.color ? ' · ' + i.color : '');
 const th = (nombre) => { const f = fotoDe(nombre); return f ? `<img class="th" src="${esc(f)}" alt="" loading="lazy">` : `<span class="th sin">${esc(String(nombre).trim().slice(0, 2).toUpperCase())}</span>`; };
 const $$ = (n) => '$' + Math.round(n || 0).toLocaleString('es-AR');
 const num = (s) => Math.round(Number(String(s ?? '').replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) || 0);
@@ -321,7 +326,7 @@ function pintarCliSel() {
 }
 function repetir(nro) {
   const p = D.pedidos.find((x) => x.nro === nro); if (!p) return;
-  F.items = p.items.map((i) => ({ nombre: i.nombre, cant: i.cant, precio: i.precio || precioSugerido(i.nombre), pers: i.pers }));
+  F.items = p.items.map((i) => ({ nombre: canon(i.nombre), color: i.color || '', cant: i.cant, precio: i.precio || precioSugerido(canon(i.nombre)), pers: i.pers }));
   pintarCliSel(); pintarItems(); aviso('Productos copiados, revisá precios y cantidades');
 }
 function precioSugerido(nombre, cliente) {
@@ -330,7 +335,7 @@ function precioSugerido(nombre, cliente) {
   for (const p of vivos()) for (const i of p.items) if (i.nombre.toLowerCase() === k && i.precio && (!mejor || (p.cliente.toLowerCase() === c) > mejor.dc || p.fecha > mejor.f)) mejor = { v: i.precio, f: p.fecha, dc: p.cliente.toLowerCase() === c };
   return mejor?.v || D.productos.find((x) => x.nombre.toLowerCase() === k)?.precio || 0;
 }
-function vendidos() { if (vendidos.m) return vendidos.m; const m = {}; for (const p of vivos()) for (const i of p.items) m[i.nombre.toLowerCase()] = (m[i.nombre.toLowerCase()] || 0) + i.cant; return vendidos.m = m; }
+function vendidos() { if (vendidos.m) return vendidos.m; const m = {}; for (const p of vivos()) for (const i of p.items) { const k = canon(i.nombre).toLowerCase(); m[k] = (m[k] || 0) + i.cant; } return vendidos.m = m; }
 function sugProductos() {
   const q = norm($('prodBus').value.trim());
   $('prodTop').style.display = q ? 'none' : 'block';
@@ -342,17 +347,18 @@ function sugProductos() {
 }
 function pintarTop() {
   const v = vendidos();
-  const top = D.productos.filter((p) => p.foto).sort((a, b) => (v[b.nombre.toLowerCase()] || 0) - (v[a.nombre.toLowerCase()] || 0)).slice(0, 12);
-  $('prodTop').innerHTML = top.length ? `<div class="small muted" style="margin-top:12px">Más vendidos · tocá para agregar</div><div class="top">${top.map((p) => `<button onclick="agregarItem(${jsArg(p.nombre)})">${th(p.nombre)}<span>${esc(p.nombre)}</span></button>`).join('')}</div>` : '';
+  const top = [...D.productos].sort((a, b) => (v[b.nombre.toLowerCase()] || 0) - (v[a.nombre.toLowerCase()] || 0));
+  $('prodTop').innerHTML = top.length ? `<div class="small muted" style="margin-top:12px">Catálogo · los más vendidos primero · tocá para agregar</div><div class="top">${top.map((p) => `<button onclick="agregarItem(${jsArg(p.nombre)})">${th(p.nombre)}<span>${esc(p.nombre)}</span></button>`).join('')}</div>` : '';
 }
 function agregarItem(nombre) {
   if (!nombre) return;
-  F.items.push({ nombre, cant: 1, precio: precioSugerido(nombre), pers: false });
+  F.items.push({ nombre, color: '', cant: 1, precio: precioSugerido(nombre), pers: false });
   $('prodBus').value = ''; $('prodSug').innerHTML = ''; $('prodTop').style.display = 'block'; pintarItems(); pintarCliSel();
   setTimeout(() => document.querySelector(`#items .it:last-child .q`)?.select(), 30);
 }
 function pintarItems() {
   $('items').innerHTML = F.items.map((i, k) => `<div class="it"><div class="nom">${th(i.nombre)}<span>${esc(i.nombre)}</span></div><button class="x" onclick="F.items.splice(${k},1);pintarItems()">Quitar</button>
+    ${(prodDe(i.nombre)?.colores || []).length ? `<div class="chips colores">${prodDe(i.nombre).colores.map((c) => `<button class="chip${i.color === c ? ' on' : ''}" onclick="F.items[${k}].color=F.items[${k}].color===${jsArg(c)}?'':${jsArg(c)};pintarItems()">${esc(c)}</button>`).join('')}</div>` : ''}
     <div class="ctr"><input class="q" inputmode="numeric" value="${i.cant}" oninput="F.items[${k}].cant=num(this.value);pintarTotales()" aria-label="Cantidad">
       <span class="small muted">×</span><input inputmode="numeric" value="${i.precio ? i.precio.toLocaleString('es-AR') : ''}" placeholder="Precio unit. neto" oninput="F.items[${k}].precio=num(this.value);pintarTotales()">
       <button class="chip${i.pers ? ' on' : ''}" onclick="F.items[${k}].pers=!F.items[${k}].pers;pintarItems()">Pers.</button></div></div>`).join('') || '<div class="vacio">Todavía no agregaste productos</div>';
@@ -406,14 +412,14 @@ function setFiltro(f) { filtro = f; pintarPedidos(); }
 function filaPedido(p) {
   const pagoTxt = p.anulado ? 'anulado' : p.saldo > 0 ? `<span class="debe">debe ${$$(p.saldo)}</span>` : p.total ? '<span class="pago-ok">pagado</span>' : '';
   return `<button class="ped${p.anulado ? ' anul' : ''}" onclick="verPedido(${p.nro})"><div class="a"><b>${esc(p.cliente)}</b>
-    <small>N° ${p.nro} · ${fmtF(p.fecha)}${D.yo.admin && p.vendedor ? ' · ' + esc(p.vendedor) : ''} · ${esc(p.items.map((i) => i.cant + ' ' + i.nombre).join(', '))}</small></div>
+    <small>N° ${p.nro} · ${fmtF(p.fecha)}${D.yo.admin && p.vendedor ? ' · ' + esc(p.vendedor) : ''} · ${esc(p.items.map((i) => i.cant + ' ' + etq(i)).join(', '))}</small></div>
     <div class="b"><b>${$$(p.total)}</b><span class="est ${p.estado}">${p.estado}</span> ${pagoTxt}</div></button>`;
 }
 function pintarPedidos() {
   chips('chPer', PER, per, 'setPer'); chips('chFiltro', ['Todos', 'Pendientes', 'Deben', 'Anulados'], filtro, 'setFiltro');
   const [d, h] = rango(per), q = norm($('pBus').value.trim());
   let l = D.pedidos.filter((p) => p.fecha >= d && p.fecha <= h);
-  if (q) l = l.filter((p) => norm(p.cliente + ' ' + p.nro + ' ' + p.vendedor + ' ' + p.items.map((i) => i.nombre).join(' ')).includes(q));
+  if (q) l = l.filter((p) => norm(p.cliente + ' ' + p.nro + ' ' + p.vendedor + ' ' + p.items.map(etq).join(' ')).includes(q));
   if (filtro === 'Pendientes') l = l.filter((p) => !p.anulado && p.estado !== 'Entregado');
   else if (filtro === 'Deben') l = l.filter((p) => !p.anulado && p.saldo > 0);
   else if (filtro === 'Anulados') l = l.filter((p) => p.anulado); else l = l.filter((p) => !p.anulado || q);
@@ -433,7 +439,7 @@ function verPedido(nro) {
     <h2 style="margin:4px 0">${esc(p.cliente)}</h2>
     ${p.anulado ? '<div class="debe">PEDIDO ANULADO</div>' : ''}
     <div class="chips">${['Pendiente', 'Armado', 'Entregado'].map((e) => `<button class="chip${p.estado === e ? ' on' : ''}" onclick="cambiarEstado(${p.nro},'${e}')">${e}</button>`).join('')}</div>
-    <table class="tabla">${p.items.map((i) => `<tr><td style="display:flex;gap:10px;align-items:center">${th(i.nombre)}<span>${i.cant} × ${esc(i.nombre)}${i.pers ? ' <span class="est Armado">pers.</span>' : ''}</span></td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
+    <table class="tabla">${p.items.map((i) => `<tr><td style="display:flex;gap:10px;align-items:center">${th(i.nombre)}<span>${i.cant} × ${esc(etq(i))}${i.pers ? ' <span class="est Armado">pers.</span>' : ''}</span></td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
     <div style="margin-top:10px">
       ${sinPrecio ? '' : `<div class="tot"><span>Neto</span><span>${$$(p.neto)}</span></div>`}
       ${p.iva ? `<div class="tot"><span>IVA</span><span>${$$(p.iva)}</span></div>` : ''}
@@ -467,12 +473,12 @@ const anular = (nro) => confirm('¿Seguro?') && accion({ accion: 'anular', nro }
 function editar(nro) {
   const p = D.pedidos.find((x) => x.nro === nro);
   F = { ...nuevoF(), nro, cliente: D.clientes.find((c) => c.nombre.toLowerCase() === p.cliente.toLowerCase()) || { nombre: p.cliente },
-    items: p.items.map((i) => ({ nombre: i.nombre, cant: i.cant, precio: i.precio, pers: i.pers })), fecha: p.fecha, fechaEntrega: p.fechaEntrega,
+    items: p.items.map((i) => ({ nombre: i.nombre, color: i.color || '', cant: i.cant, precio: i.precio, pers: i.pers })), fecha: p.fecha, fechaEntrega: p.fechaEntrega,
     entrega: p.entrega, direccion: p.direccion, conIva: p.conIva, obs: p.obs, vendedor: p.vendedor };
   cerrarModal(); pintarNuevo(); ir('nuevo');
 }
 function textoPedido(p) {
-  return `*MATEANDO · Pedido N° ${p.nro}*\n${p.cliente}\n${fmtF(p.fecha)}\n\n` + p.items.map((i) => `• ${i.cant} × ${i.nombre}${i.precio ? ` — ${$$(i.precio)} c/u` : ''}`).join('\n') +
+  return `*MATEANDO · Pedido N° ${p.nro}*\n${p.cliente}\n${fmtF(p.fecha)}\n\n` + p.items.map((i) => `• ${i.cant} × ${etq(i)}${i.precio ? ` — ${$$(i.precio)} c/u` : ''}`).join('\n') +
     `\n\n${p.iva ? `Neto: ${$$(p.neto)}\nIVA 21%: ${$$(p.iva)}\n` : ''}*Total: ${$$(p.total)}*${p.saldo > 0 && p.saldo < p.total ? `\nPagado: ${$$(p.pagado)} · Saldo: ${$$(p.saldo)}` : ''}` +
     `\n\nEntrega: ${p.entrega}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}`;
 }
@@ -485,7 +491,7 @@ function imprimir(nro) {
   const p = D.pedidos.find((x) => x.nro === nro), w = window.open('', '_blank');
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Pedido ${p.nro} - ${esc(p.cliente)}</title><style>body{font:14px system-ui;max-width:700px;margin:30px auto;padding:0 20px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.r{text-align:right}h1{font-size:20px}</style></head><body>
     <img src="${location.origin}/logo.jpg" style="height:30px" onerror="this.remove()"><h1>Pedido N° ${p.nro}</h1><p><b>${esc(p.cliente)}</b><br>Fecha: ${fmtF(p.fecha)}${p.vendedor ? '<br>Vendedor: ' + esc(p.vendedor) : ''}</p>
-    <table><tr><th>Cant.</th><th>Producto</th><th class="r">Unit.</th><th class="r">Subtotal</th></tr>${p.items.map((i) => `<tr><td>${i.cant}</td><td>${esc(i.nombre)}${i.pers ? ' (personalizado)' : ''}</td><td class="r">${i.precio ? $$(i.precio) : ''}</td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
+    <table><tr><th>Cant.</th><th>Producto</th><th class="r">Unit.</th><th class="r">Subtotal</th></tr>${p.items.map((i) => `<tr><td>${i.cant}</td><td>${esc(etq(i))}${i.pers ? ' (personalizado)' : ''}</td><td class="r">${i.precio ? $$(i.precio) : ''}</td><td class="r">${i.precio ? $$(i.precio * i.cant) : ''}</td></tr>`).join('')}</table>
     <p class="r">${p.iva ? `Neto: ${$$(p.neto)}<br>IVA 21%: ${$$(p.iva)}<br>` : ''}<b style="font-size:18px">Total: ${$$(p.total)}</b></p>
     <p>Entrega: ${esc(p.entrega)}${p.fechaEntrega ? ' · ' + fmtF(p.fechaEntrega) : ''}<br>${esc(p.direccion).replace(/\n/g, '<br>')}</p>${p.obs ? `<p>Obs.: ${esc(p.obs)}</p>` : ''}
     <script>setTimeout(()=>print(),300)<\/script></body></html>`);
@@ -514,7 +520,7 @@ function pintarClientes() {
 function verCliente(nombre) {
   const c = D.clientes.find((x) => x.nombre === nombre) || { nombre }, ps = D.pedidos.filter((p) => p.cliente.toLowerCase() === nombre.toLowerCase());
   const v = ps.filter((p) => !p.anulado), prods = {};
-  for (const p of v) for (const i of p.items) prods[i.nombre] = (prods[i.nombre] || 0) + i.cant;
+  for (const p of v) for (const i of p.items) prods[canon(i.nombre)] = (prods[canon(i.nombre)] || 0) + i.cant;
   const top = Object.entries(prods).sort((a, b) => b[1] - a[1]).slice(0, 5);
   $('hoja').innerHTML = `<button class="cerrar" onclick="cerrarModal()">×</button><h2>${esc(c.nombre)}</h2>
     <div class="small muted">${esc([c.cuit, c.telefono, c.email].filter(Boolean).join(' · ')) || 'Sin datos de contacto'}</div>
@@ -565,7 +571,7 @@ function pintarMet() {
   $('mVendBox').style.display = D.yo.admin ? 'block' : 'none';
   ranking('mVend', g((p) => p.vendedor).map(([n, [t, c]]) => [n, t, c + ' pedidos']), $$);
   ranking('mCli', g((p) => p.cliente).slice(0, 10).map(([n, [t, c]]) => [n, t, c + ' pedidos']), $$);
-  const pr = {}; for (const p of v) for (const i of p.items) pr[i.nombre] = (pr[i.nombre] || 0) + i.cant;
+  const pr = {}; for (const p of v) for (const i of p.items) pr[canon(i.nombre)] = (pr[canon(i.nombre)] || 0) + i.cant;
   ranking('mProd', Object.entries(pr).sort((a, b) => b[1] - a[1]).slice(0, 10), (x) => x.toLocaleString('es-AR') + ' u.', true);
 }
 
@@ -597,6 +603,7 @@ function editarProducto(nombre) {
       <button class="chip" onclick="fotoNueva='';$('epImg').style.display='none'">Quitar</button></div>
     <label>Nombre</label><input id="epN" value="${esc(p.nombre)}"><div class="g2"><div><label>Precio mayorista neto</label><input id="epP" value="${p.precio || ''}" inputmode="numeric"></div>
     <div><label>Costo unitario</label><input id="epC" value="${p.costo || ''}" inputmode="numeric"></div></div>
+    <label>Colores / variantes (separados por coma)</label><input id="epK" value="${esc((p.colores || []).join(', '))}" placeholder="Negro, Blanco, Rosa">
     <div class="g2" style="margin-top:14px"><button class="btn ok" onclick="guardarProducto(${jsArg(nombre || '')}, true)">Guardar</button>${nombre ? `<button class="btn mal" onclick="guardarProducto(${jsArg(nombre)}, false)">Ocultar del catálogo</button>` : ''}</div>`;
   $('modal').classList.add('on');
 }
@@ -616,7 +623,7 @@ function cargarFoto(file) {
   img.src = url;
 }
 async function guardarProducto(original, activo) {
-  try { await api({ accion: 'producto', original, nombre: $('epN').value, precio: num($('epP').value), costo: num($('epC').value), activo, ...(fotoNueva !== undefined ? { foto: fotoNueva } : {}) });
+  try { await api({ accion: 'producto', original, nombre: $('epN').value, precio: num($('epP').value), costo: num($('epC').value), colores: $('epK').value, activo, ...(fotoNueva !== undefined ? { foto: fotoNueva } : {}) });
     aviso('Producto guardado'); cerrarModal(); await cargar(); } catch (e) { aviso(e.message); }
 }
 
